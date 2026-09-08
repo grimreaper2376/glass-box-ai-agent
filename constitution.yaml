@@ -1,0 +1,146 @@
+# =============================================================================
+# GlassBox Constitution
+# =============================================================================
+# This file is the contract between you and your agents.
+#
+# Every trade the system wants to make is checked against these rules by
+# deterministic code, after the AI has finished reasoning and before anything
+# reaches an exchange. The agents cannot edit this file, argue with it, or
+# route around it. If a rule says no, the trade does not happen.
+#
+# Edit it, save, and hit "Reload constitution" in the dashboard. Changes are
+# written to the audit ledger with a diff, so you can always see when the rules
+# changed and what they were at the moment of any past trade.
+# =============================================================================
+
+version: 1
+profile: balanced   # informational label shown in the dashboard
+
+rules:
+
+  # --- Emergency ------------------------------------------------------------
+
+  kill_switch:
+    # Flip to true (or press the red button in the dashboard) to stop all new
+    # risk immediately. Existing positions are left alone so you decide how to
+    # exit. To also flatten on Binance, use the Emergency stop in your Binance
+    # sub-account dashboard — that is the authoritative one.
+    engaged: false
+
+  # --- What may be traded ---------------------------------------------------
+
+  symbol_allowlist:
+    # An empty list means "anything". Naming symbols explicitly is strongly
+    # recommended: it is the single most effective guard against an agent
+    # wandering into an illiquid token it read about on social media.
+    # These are the deepest USDT pairs on Binance by live 24h volume, with
+    # spreads under 8 bps. Regenerate the ranking any time with:
+    #     python -m glassbox discover --size 10
+    # Everything here is USDT-quoted on purpose: the Agentic sub-account is
+    # funded in USDT, and a BTC-quoted pair would need a second inventory.
+    symbols:
+      - BTCUSDT
+      - ETHUSDT
+      - BNBUSDT
+      - SOLUSDT
+      - XRPUSDT
+      - DOGEUSDT
+
+  # --- How much may be risked ----------------------------------------------
+
+  max_position_pct:
+    # Ceiling for any one symbol, as a share of equity. Oversized intents are
+    # trimmed to fit rather than rejected.
+    pct: 20
+
+  max_portfolio_concentration:
+    # Ceiling for total gross exposure. Keeps a "risk-on" mood from turning the
+    # whole book into one directional bet.
+    pct: 60
+
+  daily_loss_limit:
+    # Realised loss for the session, as a share of the equity you started the
+    # day with. Hitting it closes trading until tomorrow.
+    pct: 4
+
+  max_drawdown:
+    # Peak-to-current circuit breaker across the whole run.
+    pct: 12
+
+  # --- How often ------------------------------------------------------------
+
+  trade_rate_limit:
+    max_per_hour: 8
+
+  cooldown_after_loss:
+    # Revenge trading is the most reliably expensive human habit, and language
+    # models inherit it from the text they learned on.
+    minutes: 30
+
+  # --- Quality of the reasoning --------------------------------------------
+
+  min_confidence:
+    threshold: 0.50
+
+  quorum:
+    # At least this many analysts must independently agree with the direction.
+    min_agreeing_analysts: 2
+
+  # --- Market conditions ----------------------------------------------------
+
+  spread_guard:
+    max_bps: 25
+
+  volatility_guard:
+    atr_pct_trigger: 4.0
+    size_multiplier: 0.5
+
+  require_stop_loss:
+    enabled: true
+
+  # --- Futures (USDⓈ-M perpetuals) -----------------------------------------
+  # These only apply to futures orders. Spot is unaffected. A futures position
+  # is leveraged and can be liquidated, so it carries two extra caps on top of
+  # every rule above (which all still apply to it).
+
+  max_leverage:
+    # Hard ceiling on leverage for any futures open. A denial, not a trim:
+    # leverage multiplies mistakes, so the limit is meant to be felt.
+    max: 10
+
+  futures_position_pct:
+    # Ceiling for one futures position's notional (size × leverage) as a share
+    # of equity. Oversized opens are trimmed to fit; reduce-only closes are
+    # never gated by it, so leveraged risk can always be cut.
+    pct: 150
+
+  blackout_windows:
+    utc_windows:
+      - start: "12:25"
+        end: "12:45"
+        label: "US CPI / NFP release window"
+      - start: "18:00"
+        end: "18:20"
+        label: "FOMC statement window"
+
+  # --- When you get asked ---------------------------------------------------
+
+  human_confirmation:
+    # Confirmation fatigue is a real failure mode: if you approve everything,
+    # you approve nothing. Set this so you are only interrupted for trades that
+    # genuinely deserve a look.
+    always_confirm_above_pct: 14
+    always_confirm_symbols: []
+
+# =============================================================================
+# Data spending (Binance x402)
+# =============================================================================
+# The agents can pay per request for external data feeds. This is a hard budget,
+# enforced locally, sitting under Binance's own documented daily x402 cap.
+x402:
+  daily_budget_usd: 5.00
+  max_per_request_usd: 0.25
+  allowed_providers:
+    - onchain-flows
+    - social-sentiment
+    - funding-oracle
