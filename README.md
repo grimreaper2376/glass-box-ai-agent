@@ -3,7 +3,7 @@
 **An accountable multi-agent trading copilot for Binance Agent OS.**
 
 Binance Agent OS gives an AI agent market data, a sub-account, trading, and
-programmable payments. What it does not give anyone — including Binance — is
+programmable payments. What it does not give anyone including Binance is
 visibility into *why* the agent did what it did. From Binance's own launch
 announcement:
 
@@ -17,7 +17,7 @@ are being asked to sign something they cannot read.
 
 GlassBox closes that gap. Four specialist analysts argue about every asset, a
 machine-checkable rulebook you wrote adjudicates the result, a Guardian with veto
-power gets the last look, and every decision — taken *or refused* — is written to
+power gets the last look, and every decision taken *or refused* is written to
 a signed, hash-chained ledger you can verify from genesis at any time.
 
 ---
@@ -36,22 +36,22 @@ all of them.
 
 | Module | Role |
 |---|---|
-| **Council** | Five analysts — technical, order flow, derivatives, regime and liquidity — examine each asset independently on live Binance data. Agreement across *independent method families* is rewarded as real confluence; a verdict resting on a single family is discounted as fragile, and disagreement is priced directly into position size |
+| **Council** | Five analysts, technical, order flow, derivatives, regime and liquidity, examine each asset independently on live Binance data. Agreement across *independent method families* is rewarded as real confluence; a verdict resting on a single family is discounted as fragile, and disagreement is priced directly into position size |
 | **Sentinel** | Scores threat every tick from price velocity, volatility, correlation, drawdown and exposure; can veto, hedge, or quarantine all capital |
 | **Narrative scout** | Tracks six themes and trades only ones that are still *accelerating* while price has not yet caught up |
 | **Compass** | Ranks Binance Earn against DeFi venues in one risk-adjusted calculation and parks idle cash, recalling it the moment a trade needs funding |
 
 Underneath them sit three layers that are the actual contribution:
 
-- **The Constitution** — policy-as-code in YAML, evaluated by deterministic
+- **The Constitution**: policy-as-code in YAML, evaluated by deterministic
   Python *after* the AI finishes reasoning. The agents cannot edit it, argue with
   it, or route around it.
-- **The Decision Ledger** — append-only, SHA-256 chained, HMAC-signed. Editing or
+- **The Decision Ledger**: append-only, SHA-256 chained, HMAC-signed. Editing or
   deleting any past record breaks verification for that record and every one
   after it.
-- **The x402 meter** — autonomous data spending is budgeted, attributed to the
+- **The x402 meter**: autonomous data spending is budgeted, attributed to the
   analyst that requested it, and logged like a trade.
-- **Calibration** — every call is graded against what the market actually did, and
+- **Calibration**: every call is graded against what the market actually did, and
   an analyst that is consistently wrong has its vote cut automatically.
 
 ### The operator desk
@@ -185,10 +185,8 @@ Guardian cannot be talked out of a veto by a confident model.
 
 **One command. Real data immediately.**
 
-| | |
-|---|---|
-| ![Zero-config launch](docs/screenshots/00-zero-config-launch.png) | ![Live data streaming](docs/screenshots/00b-zero-config-live-data.png) |
-| **Seconds after `./start.sh`** — engine already running (top-right says *Pause engine*, not *Start*), real prices already moving, nothing configured | **Same launch, Pairs tab** — 487 pairs, 570 symbols streaming live, API budget healthy at 17% |
+<img width="1600" height="776" alt="image" src="https://github.com/user-attachments/assets/690d2811-2015-4580-81c9-0c56f41570a1" />
+
 
 | | |
 |---|---|
@@ -215,19 +213,8 @@ python -m glassbox drill
 ```
 
 | Drill | Asserts |
-|---|---|
-| Flash crash detected as critical | Threat scoring reacts to a market-wide gap |
-| Exposure cut when the crash hits | Stops or hedges actually reduce risk |
-| Guardian vetoes new risk while critical | Veto overrides an otherwise-legal intent |
-| Oversized position capped | Constitution trims rather than blindly accepting |
-| Kill switch denies every new intent | Emergency stop works |
-| Entries without a stop loss refused | No naked entries |
-| Unlisted symbols refused | Agent cannot wander into a token it read about |
-| x402 data budget enforced | Autonomous spend cannot run away |
-| Secrets redacted before disk | A planted API key never reaches the ledger |
-| Ledger tampering detected | Chain verification catches an edited record |
-| News/event risk has no path to a buy signal | Structurally cannot open a position, only reduce risk |
-| Withdrawal requests refused outright | The execution surface has no withdrawal capability, by construction |
+<img width="1393" height="775" alt="image" src="https://github.com/user-attachments/assets/51490958-1022-4a6d-a1cb-3c7df3578ac0" />
+
 
 Every drill runs against its own disposable engine in a temporary directory —
 verified with a test that hashes a real ledger before and after a drill run
@@ -745,7 +732,7 @@ defensive system lags badly. Both facts are in the table for the same reason.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+ See Caution.
 
 **Not financial advice.** Trading digital assets carries substantial risk. This
 software is provided as-is. You are responsible for anything your agent does with
