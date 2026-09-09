@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlassBox — agent console</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FCD535'/></svg>">
+</head>
+<body>
+<div class="shell">
+
+  <!-- ==================== rail ==================== -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">
+        <div class="brand-diamond"></div>
+        <div class="brand-name">GlassBox</div>
+      </div>
+      <div class="brand-sub" data-i18n="tagline">Accountable agent trading</div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-btn active" data-view="cockpit"><span class="nav-dot"></span><span data-i18n="nav_cockpit">Cockpit</span><span class="nav-badge" id="badge-pending" hidden>0</span></button>
+      <button class="nav-btn" data-view="control"><span class="nav-dot"></span><span data-i18n="nav_control">Control Center</span></button>
+      <button class="nav-btn" data-view="binance"><span class="nav-dot"></span><span data-i18n="nav_binance">Binance</span><span class="nav-badge" id="badge-mcp" hidden>•</span></button>
+      <button class="nav-btn" data-view="payments"><span class="nav-dot"></span><span data-i18n="nav_payments">Payments</span></button>
+      <button class="nav-btn" data-view="onchain"><span class="nav-dot"></span><span data-i18n="nav_onchain">Onchain &amp; Pay</span></button>
+      <button class="nav-btn" data-view="coins"><span class="nav-dot"></span><span data-i18n="nav_coins">Coins</span><span class="nav-badge" id="badge-coins" hidden>0</span></button>
+      <button class="nav-btn" data-view="markets"><span class="nav-dot"></span><span data-i18n="nav_markets">Pairs</span><span class="nav-badge" id="badge-pairs" hidden>0</span></button>
+      <button class="nav-btn" data-view="news"><span class="nav-dot"></span><span data-i18n="nav_news">Events</span><span class="nav-badge alarm" id="badge-news" hidden>!</span></button>
+      <button class="nav-btn" data-view="council"><span class="nav-dot"></span><span data-i18n="nav_council">Council</span></button>
+      <button class="nav-btn" data-view="calibration"><span class="nav-dot"></span><span data-i18n="nav_calibration">Track record</span></button>
+      <button class="nav-btn" data-view="sentinel"><span class="nav-dot"></span><span data-i18n="nav_sentinel">Sentinel</span><span class="nav-badge alarm" id="badge-threat" hidden>!</span></button>
+      <button class="nav-btn" data-view="narrative"><span class="nav-dot"></span><span data-i18n="nav_narrative">Narratives</span></button>
+      <button class="nav-btn" data-view="yield"><span class="nav-dot"></span><span data-i18n="nav_yield">Yield</span></button>
+      <button class="nav-btn" data-view="ledger"><span class="nav-dot"></span><span data-i18n="nav_ledger">Ledger</span></button>
+      <button class="nav-btn" data-view="replay"><span class="nav-dot"></span><span data-i18n="nav_replay">Backtest</span></button>
+      <button class="nav-btn" data-view="rules"><span class="nav-dot"></span><span data-i18n="nav_rules">Constitution</span></button>
+    </nav>
+
+    <div class="lang-row">
+      <select id="lang-select" class="lang-select" aria-label="Language" title="Language">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="es">Español</option>
+        <option value="hi">हिन्दी</option>
+        <option value="ar">العربية</option>
+        <option value="pt">Português</option>
+        <option value="fr">Français</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+
+    <div class="rail-foot">
+      <button class="killswitch" id="kill" data-i18n="killswitch">Stop all new risk</button>
+      <div class="theme-row">
+        <button class="theme-btn active" data-theme-set="dark">Dark</button>
+        <button class="theme-btn" data-theme-set="light">Light</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== main ==================== -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="stat">
+        <span class="stat-k">Equity</span>
+        <span class="stat-v num" id="t-equity">—</span>
+      </div>
+      <div class="stat" title="Whole-account profit and loss: every open position's unrealised P&L, plus everything already realised from closed trades, minus all fees paid. Not any single trade — the per-position figure is in the Open positions table below.">
+        <span class="stat-k">Net P&amp;L (whole account)</span>
+        <span class="stat-v num" id="t-pnl">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-k">Drawdown</span>
+        <span class="stat-v num" id="t-dd">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-k">Threat</span>
+        <span class="stat-v num" id="t-threat">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-k">Ledger</span>
+        <span class="stat-v num" id="t-ledger">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-k">Session</span>
+        <span class="stat-v"><span class="pill paper" id="t-mode">paper</span></span>
+      </div>
+      <div class="topbar-actions">
+        <span class="pill" id="t-mcp" title="Binance Agent OS connection. 'MCP off' means GlassBox is not connected to Binance's trading server — normal in paper mode, which simulates fills locally. It shows as connected once you connect on the Binance tab (required for mock and live modes).">MCP</span>
+        <span class="pill" id="t-stream" title="Live websocket price stream. 'live' means real Binance prices are flowing over one socket at zero API cost. The number is how many symbols are streaming right now.">stream</span>
+        <span class="pill" id="t-weight" title="How much of GlassBox's self-imposed Binance API budget is used this minute. Deliberately capped well below Binance's real limit. Green is comfortable; higher just means more data is being pulled.">API</span>
+        <span class="pill" id="t-feed" title="Where market data comes from. 'Binance live' = real prices from Binance. 'simulated' = the seeded offline market used by stress tests.">data</span>
+        <span class="pill" id="t-conn"><span class="livedot off" id="t-dot"></span><span id="t-conn-text">connecting</span></span>
+        <button class="btn btn-primary" id="run">Start engine</button>
+      </div>
+    </header>
+
+    <!-- ---------- cockpit ---------- -->
+    <section class="content active" id="view-cockpit">
+      <div id="banners"></div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Capital lifecycle</span>
+          <span class="panel-note">A single bar showing what every dollar of the account is
+            currently doing, split by percentage into the four states below. It's grey right
+            now because 100% of the account is idle — no position is open, so there's nothing
+            yet to color yellow, blue, or red. Open a position and this bar will visibly split.</span>
+        </div>
+        <div class="panel-body">
+          <div class="csm" id="csm"></div>
+          <div class="csm-legend">
+            <span class="csm-leg"><span class="csm-swatch" style="background:#5E6673"></span>Idle — cash and yield</span>
+            <span class="csm-leg"><span class="csm-swatch" style="background:var(--bnb-yellow)"></span>Deployed — conviction positions</span>
+            <span class="csm-leg"><span class="csm-swatch" style="background:var(--info)"></span>Hedged — defensive leg on</span>
+            <span class="csm-leg"><span class="csm-swatch" style="background:var(--down)"></span>Quarantined — Guardian lockdown</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="pending-host"></div>
+
+      <div class="grid g-2-1" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Equity</span>
+            <span class="panel-note" id="bench-note"></span>
+          </div>
+          <div class="panel-body"><svg class="spark" id="spark" preserveAspectRatio="none"></svg></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Session</span></div>
+          <div class="panel-body" id="session-stats"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Autonomous trading</span>
+          <span class="panel-note">Off by default — the engine analyses and shows its reasoning, but won't open positions on its own until you allow it.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="align-items:center">
+            <span id="autonomy-state" class="pill">checking…</span>
+            <button class="btn btn-sm btn-primary" id="autonomy-toggle">Enable autonomous trading</button>
+            <span class="dim">When on, the engine opens positions by itself following the Council and Narrative scout — every one still checked by the Constitution and Guardian.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px;overflow:visible">
+        <div class="panel-head">
+          <span class="panel-title">Place a trade</span>
+          <span class="panel-note">Goes through every rule the AI's own trades do — nothing here is a bypass</span>
+        </div>
+        <div class="panel-body">
+          <div class="seg" id="mt-market" style="margin-bottom:12px">
+            <button class="seg-btn active" data-market="spot">Spot</button>
+            <button class="seg-btn" data-market="futures">Futures</button>
+          </div>
+
+          <div class="ctl-row" style="flex-wrap:wrap;position:relative">
+            <div class="combo-wrap" style="position:relative;min-width:200px">
+              <input class="ctl" id="mt-symbol" placeholder="Click to browse, or type to search…"
+                value="BTCUSDT" style="width:100%" autocomplete="off">
+              <div class="combo-list" id="mt-symbol-list" hidden></div>
+            </div>
+
+            <!-- SPOT controls -->
+            <span id="mt-spot-controls" style="display:contents">
+              <select class="ctl" id="mt-side" style="min-width:100px">
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+              </select>
+              <span class="dim" id="mt-side-hint"></span>
+            </span>
+
+            <!-- FUTURES controls -->
+            <span id="mt-futures-controls" style="display:none;align-items:center;gap:8px">
+              <span class="dim">Leverage</span>
+              <select class="ctl" id="mt-leverage" style="min-width:78px">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3" selected>3x</option>
+                <option value="5">5x</option>
+                <option value="10">10x</option>
+              </select>
+            </span>
+
+            <span class="dim" id="mt-amount-label">Amount $</span>
+            <input class="ctl num" id="mt-amount" type="number" value="500" step="50" style="width:110px">
+
+            <!-- SPOT actions -->
+            <span id="mt-spot-actions" style="display:contents">
+              <button class="btn btn-sm" id="mt-check">Check first</button>
+              <button class="btn btn-sm btn-primary" id="mt-place">Place trade</button>
+            </span>
+
+            <!-- FUTURES actions -->
+            <span id="mt-futures-actions" style="display:none;align-items:center;gap:8px">
+              <button class="btn btn-sm" id="mtf-check">Check first</button>
+              <button class="btn btn-sm btn-long" id="mtf-long">Open Long</button>
+              <button class="btn btn-sm btn-short" id="mtf-short">Open Short</button>
+            </span>
+
+            <span class="dim" id="mt-status"></span>
+          </div>
+          <div class="dim" id="mt-futures-note" style="display:none;margin-top:8px;font-size:12.5px"></div>
+          <div id="mt-opinion" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="futures-panel" style="margin-bottom:14px;display:none">
+        <div class="panel-head">
+          <span class="panel-title">Futures positions</span>
+          <span class="panel-note">USDⓈ-M perpetuals — leveraged, isolated margin. Green is long, red is short.</span>
+        </div>
+        <div class="panel-body flush"><div id="futures-positions"></div></div>
+      </div>
+
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Open positions</span></div>
+          <div class="panel-body flush"><div id="positions"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Market</span><span class="panel-note" id="market-src"></span></div>
+          <div class="panel-body flush"><div id="market"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Activity</span></div>
+          <div class="panel-body flush"><div class="scroll" id="activity"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Recent decisions</span><span class="panel-note">Each one is a signed ledger entry</span></div>
+          <div class="panel-body scroll" id="receipts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- control center ---------- -->
+    <section class="content" id="view-control">
+      <div id="cc-live-banner"></div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Mode &amp; data source</span>
+          <span class="panel-note">Everything below used to be a shell command. It isn't any more.</span>
+        </div>
+        <div class="panel-body">
+          <div class="mode-grid" id="mode-grid"></div>
+
+          <div class="ctl-row" style="margin-top:14px;align-items:center">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="cc-live-data">
+              <span>Use live Binance market data</span>
+            </label>
+            <span class="faint" id="cc-live-data-note" style="font-size:11px"></span>
+          </div>
+
+          <div id="cc-live-confirm" hidden style="margin-top:12px">
+            <div class="banner crit">
+              <strong>Live mode places real orders on Binance with real funds.</strong>
+              Confirm you understand before applying.
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin:10px 0;cursor:pointer">
+              <input type="checkbox" id="cc-confirm-live">
+              <span>I understand this places real orders in my Agentic sub-account.</span>
+            </label>
+          </div>
+
+          <div class="ctl-row" style="margin-top:14px">
+            <button class="btn btn-primary" id="cc-apply-mode">Apply</button>
+            <span class="dim" id="cc-mode-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px" id="cc-clientid-panel" hidden>
+        <div class="panel-head">
+          <span class="panel-title">Binance OAuth client ID</span>
+          <span class="panel-note">Required once before Live mode can authorize. No shell required.</span>
+        </div>
+        <div class="panel-body" id="cc-clientid-body"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px" id="cc-authorize-panel" hidden>
+        <div class="panel-head">
+          <span class="panel-title">Authorize with Binance</span>
+          <span class="panel-note">OAuth 2.1 + PKCE, opened in a new tab. No shell required.</span>
+        </div>
+        <div class="panel-body" id="cc-authorize-body"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Run the safety drills</span>
+          <span class="panel-note">Twelve adversarial checks, in a disposable engine and ledger — this can never touch your real audit trail.</span>
+        </div>
+        <div class="panel-body">
+          <button class="btn btn-primary btn-sm" id="cc-run-drill">Run 12 drills</button>
+          <span class="dim" id="cc-drill-status" style="margin-left:10px"></span>
+          <div id="cc-drill-out" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Run a simulated stress test</span>
+          <span class="panel-note">Five seeded market conditions, run in an isolated engine that never touches your real ledger.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="margin-bottom:10px">
+            <select class="ctl" id="cc-bt-scenario">
+              <option value="crash">Cascading crash</option>
+              <option value="bear">Grinding bear</option>
+              <option value="chop">Violent chop</option>
+              <option value="bull">Trending bull</option>
+              <option value="calm" selected>Calm drift</option>
+            </select>
+            <span class="dim">Ticks</span>
+            <input class="ctl num" id="cc-bt-ticks" type="number" value="400" step="50" style="width:90px">
+            <span class="dim">Equity</span>
+            <input class="ctl num" id="cc-bt-equity" type="number" value="10000" step="1000" style="width:100px">
+            <button class="btn btn-primary btn-sm" id="cc-run-backtest">Run backtest</button>
+            <span class="dim" id="cc-bt-status"></span>
+          </div>
+          <div class="split-note" style="margin-bottom:10px">
+            <strong>Calm drift</strong> — small steady gains, low volatility: an ordinary quiet
+            market, the baseline every other scenario is measured against.
+            <strong>Trending bull</strong> — sustained upward moves at moderate volatility: tests
+            whether risk controls needlessly hold the system back during a genuine rally.
+            <strong>Grinding bear</strong> — sustained decline at elevated volatility: tests
+            whether losses are cut early rather than allowed to compound.
+            <strong>Violent chop</strong> — no net direction at all, but sharp swings in both
+            directions: tests whether the system avoids getting whipsawed into repeated
+            small losses. <strong>Cascading crash</strong> — a severe, fast decline at extreme
+            volatility: tests whether the Guardian actually protects capital when it matters most.
+          </div>
+          <div id="cc-bt-out"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Backfill the analyst track record</span>
+          <span class="panel-note">Real Binance history — updates the Track Record tab immediately.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="margin-bottom:10px">
+            <select class="ctl" id="cc-cal-interval">
+              <option value="15m">15m</option>
+              <option value="1h" selected>1h</option>
+              <option value="4h">4h</option>
+              <option value="1d">1d</option>
+            </select>
+            <span class="dim">Bars</span>
+            <input class="ctl num" id="cc-cal-bars" type="number" value="400" step="50" style="width:90px">
+            <span class="dim">Horizon (bars)</span>
+            <input class="ctl num" id="cc-cal-horizon" type="number" value="6" step="1" style="width:70px">
+            <button class="btn btn-primary btn-sm" id="cc-run-calibrate">Run calibration</button>
+            <span class="dim" id="cc-cal-status"></span>
+          </div>
+          <div id="cc-cal-out"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- council ---------- -->
+    <section class="content" id="view-council">
+      <div class="panel" style="margin-bottom:14px;overflow:visible">
+        <div class="panel-head">
+          <span class="panel-title">Analyze any pair</span>
+          <span class="panel-note">Run the full five-analyst Council on a coin the engine doesn't trade — a complete verdict on demand. To discuss a pair in plain English, use the chat button in the bottom-right corner.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="gap:8px">
+            <input class="ctl" id="ca-symbol" placeholder="e.g. INJUSDT, ARBUSDT, AVAXUSDT" style="min-width:220px;text-transform:uppercase" autocomplete="off">
+            <button class="btn btn-sm btn-primary" id="ca-go" data-i18n="analyze">Analyze</button>
+            <span class="dim" id="ca-status"></span>
+          </div>
+          <div id="ca-result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">The Council</span>
+          <span class="panel-note">Five analysts examine each asset independently. Agreement across independent method families counts as real confluence; a single-family view is discounted, and disagreement is priced into size.</span>
+        </div>
+        <div class="panel-body flush"><div id="roster"></div></div>
+      </div>
+      <div id="verdicts"></div>
+    </section>
+
+    <!-- ---------- sentinel ---------- -->
+    <section class="content" id="view-sentinel">
+      <div class="grid g-2-1" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Threat assessment</span>
+            <span class="panel-note">Scored every tick from real price velocity, volume and volatility — before any agent is allowed to speak</span>
+          </div>
+          <div class="panel-body">
+            <div class="split-note" style="margin-bottom:10px">A reading of 0/normal means the
+              real market genuinely hasn't moved fast enough to register as a threat right now —
+              this is computed fresh every tick, not a fixed value. To see it react, use
+              <strong>Drill the Guardian</strong> below and click <strong>Crash the whole book</strong>.</div>
+            <div class="gauge-wrap">
+              <div class="gauge" id="gauge"></div>
+              <div style="flex:1;min-width:0">
+                <div id="threat-rec" style="font-size:13px;font-weight:600;margin-bottom:8px"></div>
+                <div id="threat-factors"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Guardian record</span></div>
+          <div class="panel-body" id="guardian-stats"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Drill the Guardian</span>
+          <span class="panel-note">Simulated market only. Prove the safety story rather than describing it.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="margin-bottom:10px">
+            <span class="dim">Regime</span>
+            <select class="ctl" id="scenario">
+              <option value="calm">Calm drift</option>
+              <option value="bull">Trending bull</option>
+              <option value="bear">Grinding bear</option>
+              <option value="chop">Violent chop</option>
+              <option value="crash">Cascading crash</option>
+            </select>
+            <button class="btn btn-sm" id="apply-scenario">Apply</button>
+          </div>
+          <div class="ctl-row">
+            <span class="dim">Shock</span>
+            <select class="ctl" id="shock-symbol"></select>
+            <input class="ctl num" id="shock-pct" type="number" value="-9" step="0.5" style="width:78px">
+            <span class="dim">%</span>
+            <button class="btn btn-sm btn-down" id="apply-shock">Inject</button>
+            <button class="btn btn-sm" id="crash-all">Crash the whole book</button>
+            <button class="btn btn-sm" id="clear-q">Clear quarantine</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">Defensive actions</span></div>
+        <div class="panel-body flush"><div id="defensive"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- narratives ---------- -->
+    <section class="content" id="view-narrative">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Narrative strength</span>
+          <span class="panel-note">A theme is only tradable while attention is still building and price has not caught up.</span>
+        </div>
+        <div class="panel-body">
+          <div class="split-note" style="margin-bottom:10px;border-left:2px solid var(--bnb-yellow);padding-left:10px">
+            <strong>What this is for.</strong> In crypto, price often follows a story — a theme the
+            market gets excited about (AI agents, real-world assets, DePIN). This panel tracks how much
+            attention each theme is getting and, crucially, whether that attention is rising <em>faster
+            than price has already moved</em>. A theme that is being talked about more while its coins
+            haven't run yet is an early signal; one that's loud only after a big rally is just news. The
+            scout surfaces the first kind and ignores the second. It never opens a trade on its own —
+            it's a radar for where momentum may be forming, and like everything else it's still gated by
+            the Constitution and Guardian before any position is taken.
+          </div>
+          <div class="split-note" style="margin-bottom:10px">Six curated themes, each mapped to
+            the specific coins that actually represent it — not a live scan across every pair.
+            A coin outside this mapping (checked in Pairs or Coins) won't appear here even if you
+            add it to your watchlist, because no theme has been written to cover it yet. The
+            themes and their coins: Bitcoin as a macro asset (BTC), Layer-2 scaling (ETH), DePIN
+            (SOL), real-world asset tokenisation (ETH, BNB), DeFi yield and restaking (ETH, BNB),
+            and AI agents and agentic finance (ETH, SOL).</div>
+          <div id="narratives"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- yield ---------- -->
+    <section class="content" id="view-yield">
+      <div class="grid g-2-1" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Where idle cash sits</span>
+            <span class="panel-note">Binance Earn and DeFi compared in one ranking</span>
+          </div>
+          <div class="panel-body flush"><div id="venues"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Current routing</span></div>
+          <div class="panel-body" id="yield-stats"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Data spending</span>
+          <span class="panel-note">Binance x402, metered per request and capped locally</span>
+        </div>
+        <div class="panel-body" id="x402"></div>
+      </div>
+    </section>
+
+    <!-- ---------- binance / MCP ---------- -->
+    <section class="content" id="view-binance">
+      <div id="mcp-banner"></div>
+
+      <div class="panel" style="margin-bottom:14px" id="mcp-clientid-panel" hidden>
+        <div class="panel-head">
+          <span class="panel-title">Binance OAuth client ID</span>
+          <span class="panel-note">Required once before this mode can reach Binance's real login.</span>
+        </div>
+        <div class="panel-body" id="mcp-clientid-body"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px" id="mcp-authorize-panel" hidden>
+        <div class="panel-head">
+          <span class="panel-title">Authorize with Binance</span>
+          <span class="panel-note">OAuth 2.1 + PKCE, opened in a new tab. No shell required.</span>
+        </div>
+        <div class="panel-body" id="mcp-authorize-body"></div>
+      </div>
+
+      <div class="grid g-2-1" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Binance Agent OS session</span>
+            <span class="panel-note">Model Context Protocol over Streamable HTTP</span>
+            <span class="right">
+              <button class="btn btn-sm btn-primary" id="mcp-connect">Connect</button>
+              <button class="btn btn-sm" id="mcp-disconnect">Disconnect</button>
+            </span>
+          </div>
+          <div class="panel-body" id="mcp-detail"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Agentic sub-account</span></div>
+          <div class="panel-body" id="mcp-balances"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Tools Binance exposed to this session</span>
+          <span class="panel-note">Read live from Binance for this session, not assumed in advance</span>
+        </div>
+        <div class="panel-body flush"><div class="scroll" id="mcp-tools"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Orders sent through MCP</span>
+          <span class="panel-note">Each one carries the hash of the reasoning that produced it.</span>
+        </div>
+        <div class="panel-body flush"><div id="mcp-orders"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- payments & settlement ---------- -->
+    <section class="content" id="view-payments">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Settlement wallet</span>
+          <span class="panel-note">A real wallet on Base Sepolia (testnet) used to settle agent-to-agent payments. Holds no real value.</span>
+        </div>
+        <div class="panel-body" id="pay-wallet"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Inspect any address or transaction</span>
+          <span class="panel-note">Paste a wallet address or transaction hash from Bitcoin, Ethereum, Solana, BNB Smart Chain, Base, Arbitrum, Polygon, Optimism or Avalanche. Read directly from each chain — nothing is signed or sent.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="flex-wrap:wrap">
+            <select class="ctl" id="insp-chain" style="min-width:180px"></select>
+            <input class="ctl" id="insp-query" placeholder="0x… address or tx hash, or a Solana address"
+              style="flex:1;min-width:320px" autocomplete="off">
+            <button class="btn btn-primary btn-sm" id="insp-run">Look up</button>
+            <span class="dim" id="insp-status"></span>
+          </div>
+          <div id="insp-result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Payment counterparties</span>
+          <span class="panel-note">Nothing is payable until you add a counterparty with a real address. Fails closed by design.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row" style="flex-wrap:wrap;margin-bottom:10px">
+            <input class="ctl" id="pay-cp-name" placeholder="Counterparty name" style="min-width:160px">
+            <input class="ctl" id="pay-cp-addr" placeholder="0x… settlement address" style="flex:1;min-width:280px">
+            <button class="btn btn-sm" id="pay-cp-add">Add to allowlist</button>
+          </div>
+          <div id="pay-allowlist"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Payments made</span>
+          <span class="panel-note">Each carries the ledger hash of the reasoning that authorised it, and a real transaction link.</span>
+        </div>
+        <div class="panel-body flush"><div id="pay-history"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- onchain & pay (paper) ---------- -->
+    <section class="content" id="view-onchain">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title" data-i18n="oc_title">Onchain &amp; payment workflows</span>
+          <span class="panel-note" data-i18n="oc_note">A paper wallet for staking, DeFi swaps and agent-to-agent payments. Separate from trading, screened by a spending policy, and every action is written to the signed ledger. No real funds — a demonstration in the spirit of paper mode.</span>
+        </div>
+        <div class="panel-body">
+          <div class="oc-wallet">
+            <div class="oc-bal"><span class="dim" data-i18n="oc_wallet">Paper wallet</span><div class="oc-bal-num"><span id="oc-usdc">—</span> <span class="dim">USDC</span></div></div>
+            <div class="oc-bal"><span class="dim" data-i18n="oc_staked">Staked</span><div class="oc-bal-num"><span id="oc-staked">—</span> <span class="dim">USDC</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="panel" style="margin-bottom:14px;overflow:visible">
+          <div class="panel-head"><span class="panel-title" data-i18n="oc_stake_title">Staking</span>
+            <span class="panel-note" data-i18n="oc_stake_note">Stake paper USDC into an asset to earn yield; claim rewards anytime.</span></div>
+          <div class="panel-body">
+            <div class="ctl-row" style="gap:8px;flex-wrap:wrap">
+              <select class="ctl" id="oc-stake-asset" style="min-width:110px"></select>
+              <input class="ctl" id="oc-stake-amt" type="number" placeholder="USDC" style="width:120px" autocomplete="off">
+              <button class="btn btn-sm btn-primary" id="oc-stake" data-i18n="oc_btn_stake">Stake</button>
+              <button class="btn btn-sm" id="oc-unstake" data-i18n="oc_btn_unstake">Unstake</button>
+              <button class="btn btn-sm" id="oc-claim" data-i18n="oc_btn_claim">Claim</button>
+            </div>
+            <div id="oc-stakes" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:14px;overflow:visible">
+          <div class="panel-head"><span class="panel-title" data-i18n="oc_swap_title">Swap (DeFi)</span>
+            <span class="panel-note" data-i18n="oc_swap_note">Swap USDC into another asset at a reference rate.</span></div>
+          <div class="panel-body">
+            <div class="ctl-row" style="gap:8px;flex-wrap:wrap">
+              <span class="dim" style="font-size:12px">USDC →</span>
+              <select class="ctl" id="oc-swap-to" style="min-width:100px"></select>
+              <input class="ctl" id="oc-swap-amt" type="number" placeholder="USDC" style="width:120px" autocomplete="off">
+              <button class="btn btn-sm btn-primary" id="oc-swap" data-i18n="oc_btn_swap">Swap</button>
+            </div>
+            <div id="oc-tokens" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head"><span class="panel-title" data-i18n="oc_pay_title">Agent-to-agent payment</span>
+          <span class="panel-note" data-i18n="oc_pay_note">Pay another agent or service in paper USDC — the automated payment a data-buying agent would make. Screened, then signed to the ledger.</span></div>
+        <div class="panel-body">
+          <div class="ctl-row" style="gap:8px;flex-wrap:wrap">
+            <input class="ctl" id="oc-pay-to" placeholder="agent id, label, or address" style="flex:1;min-width:200px" autocomplete="off">
+            <input class="ctl" id="oc-pay-amt" type="number" placeholder="USDC" style="width:120px" autocomplete="off">
+            <input class="ctl" id="oc-pay-memo" placeholder="memo (optional)" style="flex:1;min-width:160px" autocomplete="off">
+            <button class="btn btn-sm btn-primary" id="oc-pay" data-i18n="oc_btn_pay">Pay</button>
+          </div>
+          <div class="dim" id="oc-msg" style="margin-top:8px;font-size:12.5px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head"><span class="panel-title" data-i18n="oc_receipts">Signed action receipts</span>
+          <span class="panel-note" data-i18n="oc_receipts_note">Every action above, recorded on the tamper-evident ledger.</span></div>
+        <div class="panel-body flush"><div id="oc-receipts"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- coins ---------- -->
+    <section class="content" id="view-coins">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Every coin on Binance</span>
+          <span class="panel-note" id="coins-note">Volume summed across all of a coin's pairs and converted to USD.</span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row">
+            <input class="ctl" id="coin-search" placeholder="Search asset, e.g. SOL" style="width:190px">
+            <button class="btn btn-sm" id="coin-refresh">Refresh</button>
+            <span class="dim" id="coin-count"></span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-body flush"><div class="scroll-lg" id="coins"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- markets ---------- -->
+    <section class="content" id="view-markets">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Every pair on Binance</span>
+          <span class="panel-note" id="markets-note"></span>
+        </div>
+        <div class="panel-body">
+          <div class="ctl-row">
+            <input class="ctl" id="mkt-search" placeholder="Search symbol or asset" style="width:190px">
+            <select class="ctl" id="mkt-quote">
+              <option value="USDT">USDT</option><option value="FDUSD">FDUSD</option>
+              <option value="BTC">BTC</option><option value="ETH">ETH</option>
+              <option value="BNB">BNB</option><option value="EUR">EUR</option>
+            </select>
+            <select class="ctl" id="mkt-sort">
+              <option value="volume">Top volume</option>
+              <option value="change">Biggest gainers</option>
+              <option value="losers">Biggest losers</option>
+              <option value="trades">Most trades</option>
+              <option value="spread">Tightest spread</option>
+              <option value="symbol">A–Z</option>
+            </select>
+            <button class="btn btn-sm" id="mkt-refresh">Refresh</button>
+            <span class="dim" id="mkt-count"></span>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head"><span class="panel-title">Data health</span>
+          <span class="panel-note">Binance meters by request weight, not request count.</span></div>
+        <div class="panel-body" id="data-health"></div>
+      </div>
+      <div class="grid g-2-1">
+        <div class="panel">
+          <div class="panel-body flush"><div class="scroll-lg" id="markets"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Pair detail</span></div>
+          <div class="panel-body scroll-lg" id="symbol-detail">
+            <div class="empty"><strong>Pick a pair</strong>Every analyst will examine it live.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- news / events ---------- -->
+    <section class="content" id="view-news">
+      <div id="news-banner"></div>
+      <div class="grid g-2-1" style="margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">What the agent is allowed to do right now</span>
+            <span class="panel-note">News changes risk posture, never direction.</span>
+          </div>
+          <div class="panel-body" id="news-risk"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Sources</span></div>
+          <div class="panel-body" id="news-sources"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">US macro regime</span>
+          <span class="panel-note">Fed H.15 yields and the scheduled FOMC calendar — de-risks before the event, not after</span>
+        </div>
+        <div class="panel-body" id="macro-body"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Headlines being monitored</span>
+          <span class="panel-note">Ranked by risk, not recency</span>
+          <span class="right" style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <span class="dim" id="news-updated" style="font-size:11px"></span>
+            <button class="btn btn-sm" id="news-refresh">Refresh now</button>
+          </span>
+        </div>
+        <div class="panel-body flush">
+          <div class="split-note" style="padding:10px 14px 0">The time beside each headline is
+            when it was published, not how recently GlassBox checked for new ones — GlassBox
+            re-checks its sources automatically every two minutes in the background, whether or
+            not this tab is open. A "39m" headline simply means the real world hasn't published
+            anything newer yet on that topic.</div>
+          <div class="scroll-lg" id="news-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- calibration ---------- -->
+    <section class="content" id="view-calibration">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Are the analysts any good?</span>
+          <span class="panel-note">Every call is graded against what the market actually did.</span>
+        </div>
+        <div class="panel-body flush"><div id="calibration"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">How this is scored</span></div>
+        <div class="panel-body" id="calib-explainer"></div>
+      </div>
+    </section>
+
+    <!-- ---------- replay ---------- -->
+    <section class="content" id="view-replay">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Backtest on real Binance history</span>
+          <span class="panel-note">Genuine candles, replayed bar by bar with no look-ahead.</span>
+        </div>
+        <div class="panel-body">
+          <div class="split-note" style="margin-bottom:10px">This is a different tool from
+            Control Center's stress test, not a duplicate of it. This tab replays what actually
+            happened on Binance over a real historical window — real prices, real volatility,
+            real market character, whatever that character was. Control Center's stress test
+            instead runs five synthetic, adversarial scripts (a scripted crash, a scripted grind
+            down) specifically designed to probe one behaviour each. Use this tab to ask "how
+            would the system have performed in reality"; use Control Center's stress test to ask
+            "does the Guardian actually intervene when a crash is scripted to happen."</div>
+          <div class="ctl-row">
+            <span class="dim">Candle</span>
+            <select class="ctl" id="rp-interval">
+              <option value="15m">15m</option><option value="1h" selected>1h</option>
+              <option value="4h">4h</option><option value="1d">1d</option>
+            </select>
+            <span class="dim">Bars</span>
+            <input class="ctl num" id="rp-bars" type="number" value="600" step="100" style="width:88px">
+            <button class="btn btn-primary btn-sm" id="rp-run">Run backtest</button>
+            <span class="dim" id="rp-status"></span>
+          </div>
+        </div>
+      </div>
+      <div id="replay-out"></div>
+    </section>
+
+    <!-- ---------- ledger ---------- -->
+    <section class="content" id="view-ledger">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Decision ledger</span>
+          <span class="panel-note">Binance can see the orders an agent places, but not why. This is the missing half.</span>
+          <span class="right">
+            <button class="btn btn-sm" id="verify">Verify chain</button>
+          </span>
+        </div>
+        <div class="panel-body" id="verify-out">
+          <div class="empty">Press <strong>Verify chain</strong> to re-derive every hash and signature from genesis.</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">External anchors</span>
+          <span class="panel-note">Each checkpoint binds the ledger head to Binance's server clock and market price.</span>
+          <span class="right">
+            <button class="btn btn-sm" id="anchor-now">Anchor now</button>
+            <button class="btn btn-sm" id="anchor-verify">Verify anchors</button>
+          </span>
+        </div>
+        <div class="panel-body" id="anchor-out"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">Records</span><span class="panel-note" id="ledger-count"></span></div>
+        <div class="panel-body flush"><div class="scroll-lg" id="ledger"></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- constitution ---------- -->
+    <section class="content" id="view-rules">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <span class="panel-title">Your rules</span>
+          <span class="panel-note">Deterministic code, evaluated after the AI finishes reasoning and before anything reaches an exchange.</span>
+          <span class="right"><button class="btn btn-sm" id="reload-rules">Reload from file</button></span>
+        </div>
+        <div class="panel-body flush">
+          <div class="split-note" style="padding:10px 14px 0">This is the actual rulebook every
+            trade is checked against — not a summary shown elsewhere, the real source of truth.
+            The table below is the current, live-loaded value of every rule; the raw file beneath
+            it is what's actually saved on disk. Edit <code>constitution.yaml</code> directly,
+            save it, then click <strong>Reload from file</strong> — the change takes effect
+            immediately, and the ledger records exactly what changed and when, so a rule change
+            is as auditable as a trade.</div>
+          <div id="rules"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">constitution.yaml</span><span class="panel-note" id="rules-path"></span></div>
+        <div class="panel-body"><pre class="code" id="rules-raw"></pre></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-host" id="toasts"></div>
+
+<!-- Floating Analyst Desk — available on every tab -->
+<button id="desk-fab" class="desk-fab" title="Ask the desk" aria-label="Ask the desk">
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H9l-4 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5v-8Z" fill="#12161C"/>
+    <circle cx="9" cy="9.5" r="1.1" fill="#FCD535"/><circle cx="12" cy="9.5" r="1.1" fill="#FCD535"/><circle cx="15" cy="9.5" r="1.1" fill="#FCD535"/>
+  </svg>
+</button>
+<div id="desk-popup" class="desk-popup" hidden>
+  <div class="desk-popup-head">
+    <div class="desk-popup-title">
+      <span class="desk-popup-dot"></span><span data-i18n="ask_desk">Ask the desk</span>
+      <span class="pill" id="llm-status" title="Which brain is answering">grounded</span>
+    </div>
+    <div class="desk-popup-actions">
+      <button class="btn btn-sm" id="llm-connect-btn" data-i18n="connect_model">Connect a model</button>
+      <button class="desk-x" id="desk-close" aria-label="Close" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="desk-popup-body">
+    <div id="llm-form" class="llm-form" hidden>
+      <div class="llm-form-row">
+        <select class="ctl" id="llm-provider" style="min-width:120px">
+          <option value="groq">Groq — free</option>
+          <option value="gemini">Gemini — free</option>
+          <option value="openai">OpenAI (GPT)</option>
+          <option value="anthropic">Anthropic (Claude)</option>
+        </select>
+        <input class="ctl" id="llm-key" type="password" placeholder="Paste your free API key" style="flex:1;min-width:150px" autocomplete="off">
+        <button class="btn btn-sm btn-primary" id="llm-save">Connect</button>
+        <button class="btn btn-sm" id="llm-cancel">Cancel</button>
+        <button class="btn btn-sm" id="llm-disconnect" hidden>Disconnect</button>
+      </div>
+      <div class="llm-form-help">
+        <span id="llm-help-link"></span>
+        <span class="dim"> · Optional. The desk already works without a model — a key just makes it fully conversational. Your key stays on this machine and is only sent to the provider you choose.</span>
+      </div>
+      <div class="llm-model-row" id="llm-model-row" hidden>
+        <label class="dim" for="llm-model" style="font-size:12px">Model</label>
+        <select class="ctl" id="llm-model" style="flex:1;min-width:160px"></select>
+      </div>
+      <div id="llm-msg" class="llm-msg" hidden></div>
+    </div>
+    <div id="desk-log" class="desk-log">
+      <div class="desk-msg desk-bot">
+        <div class="desk-bubble">Ask me about any Binance pair — including ones the engine doesn't trade. For example: <em>"what do you think of SOL right now?"</em>, <em>"how risky is INJ at 10x?"</em>, or <em>"why is BTC dumping?"</em><br><br>You can also paste a <strong>wallet address or transaction hash</strong> to look it up across 10 chains — add the chain if you know it, e.g. <em>"on base"</em>.</div>
+      </div>
+    </div>
+    <div class="desk-suggest" id="desk-suggest">
+      <button class="chip" data-q="What do you think of SOL right now?">What do you think of SOL?</button>
+      <button class="chip" data-q="How risky is BTC here?">How risky is BTC?</button>
+      <button class="chip" data-q="Key levels for ETH">Key levels for ETH</button>
+      <button class="chip" data-q="How is the whole market looking?">How's the market?</button>
+    </div>
+  </div>
+  <div class="desk-popup-input">
+    <input class="ctl" id="desk-input" placeholder="Ask about a coin or pair…" data-i18n-ph="desk_ph" style="flex:1" autocomplete="off">
+    <button class="btn btn-sm btn-primary" id="desk-send" data-i18n="send">Send</button>
+  </div>
+</div>
+
+<script src="/static/i18n.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
